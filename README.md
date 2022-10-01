@@ -18,6 +18,8 @@ This diagram can be previewed using a Mermaid preview tool like [Mermaid Live](h
   - IE `[sublock, ...]`
   - [ ] can generate diagram string
   - [ ] can generate SQL Schema statements
+- [ ] use correct whitespacing
 - [ ] figure out how to represent relationship data
 - [ ] find ways to best guess data types of columns
+- [ ] import from mermaid ERDiagram
 - [ ] find ways to best guess relationships between entities
