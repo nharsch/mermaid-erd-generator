@@ -45,7 +45,7 @@ class ERDBlock(object):
     def erd_string(self):
         # TODO: how to fix whitespacing
         erd_str = "{entity_name} {{ {attributes} }}".format(entity_name=self.entity_name.upper(),
-                                                            attributes="\n".join(("{} {}".format(c[0], c[1]) for c in self.attributes)))
+                                                            attributes=" ".join(("{} {}".format(c[0], c[1]) for c in self.attributes)))
         return erd_str
 
 
