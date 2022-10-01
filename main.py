@@ -2,26 +2,14 @@
 import os
 import csv
 import sys
-from schema import Schema, Or
+from schema import Schema, Or, Regex
 
 
-CSV_DIR = "csvs"
+CSV_DIR = "csvs"  # TODO: remove
 
-# print("erDiagram")
-# for filename in os.listdir(CSV_DIR):
-#     path = os.path.join(CSV_DIR, filename)
-#     with open(path) as file:
-#         reader = csv.reader(file)
-#         table_name = filename.replace(".csv", "")
-#         headers = next(reader)
-#         erd_str = "{table_name} {{ {columns} }}".format(table_name=table_name.upper(),
-#                                                         columns="\n".join("string {}".format(c) for c in headers))
 
-#         print(erd_str)
-
-# Supports the SQLITE minimum set + bool
-erd_attribute = Schema((Or("str", "int", "float", "bool"), str))
-
+erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLITE minimum set + bool
+                        Regex("^\S*$")))                    # Non empty strings for names
 
 
 class ERDBlock(object):
