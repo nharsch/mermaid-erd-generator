@@ -20,14 +20,19 @@ CSV_DIR = "csvs"
 #         print(erd_str)
 
 # Supports the SQLITE minimum set + bool
-erd_attribute = Schema((str, Or(str, int, float, bool, None)))
+erd_attribute = Schema((Or("str", "int", "float", "bool"), str))
 
 
 
 class ERDBlock(object):
     def __init__(self, entity_name: str, attributes: erd_attribute):
         self.entity_name = entity_name
+        for attribute in attributes:
+            erd_attribute.validate(attribute)
         self.attributes = attributes
+
+    def __repr__(self):
+        return self.erd_string
 
     @classmethod
     def from_csv(cls, path):
@@ -60,6 +65,9 @@ class ERDDiagram(object):
 
     def __init__(self, blocks):
         self.blocks = blocks
+
+    def __repr__(self):
+        return self.erd_string
 
     @classmethod
     def from_csv_dir(cls, csv_dir):
