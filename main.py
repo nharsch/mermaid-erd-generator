@@ -15,8 +15,8 @@ erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLIT
 class ERDBlock(object):
     def __init__(self, entity_name: str, attributes: erd_attribute):
         self.entity_name = entity_name
-        for attribute in attributes:
-            erd_attribute.validate(attribute)
+        # for attribute in attributes:
+        #     erd_attribute.validate(attribute)
         self.attributes = attributes
 
     def __repr__(self):
@@ -33,7 +33,7 @@ class ERDBlock(object):
             entity_name = os.path.basename(path).replace(".csv", "")
             headers = next(reader)
             # TODO: try to guess data type given values
-            attributes = [('string', h) for h in headers]
+            attributes = [('str', h.strip().replace(" ", "-")) for h in headers if h]
             return cls(entity_name, attributes)
 
     @classmethod
