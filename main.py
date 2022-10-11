@@ -47,7 +47,6 @@ class ERDBlock(object):
             reader = csv.reader(csv_file)
             entity_name = os.path.basename(path).replace(".csv", "")
             headers = next(reader)
-            print(cleaned_headers(headers))
             # TODO: try to guess data type given values
             attributes = [('str', header) for header in cleaned_headers(headers)]
             return cls(entity_name, attributes)
