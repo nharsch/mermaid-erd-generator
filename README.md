@@ -8,7 +8,7 @@ Given a `csv_directory` of csv files representing entities (IE: each file is a S
 
 -- or --
 
-Add CSV files to `csvs` directory and uun `./main.py`
+Add CSV files to `csvs` directory and run `./main.py`
 
 This will print a Mermaid ERD Diagram with Entities for each CSV file. CSV Header rows will be used to generate entitiy attributes. By default, all entity attributes will be `string` data types.
 
