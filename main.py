@@ -12,11 +12,26 @@ erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLIT
                         Regex("^\S*$")))                    # Non empty strings for names
 
 
+def cleaned_headers(headers):
+    cleaned_headers = []
+    empty_idx = 0
+    for header in headers:
+        # strip whtiespace and slugify
+        cleaned = header.strip().replace(" ", "_")
+        # label empty headers
+        if cleaned == "":
+            empty_idx += 1
+            cleaned_headers.append("empty_header_{}".format(empty_idx))
+        else:
+            cleaned_headers.append(cleaned)
+    return cleaned_headers
+
+
 class ERDBlock(object):
     def __init__(self, entity_name: str, attributes: erd_attribute):
         self.entity_name = entity_name
-        # for attribute in attributes:
-        #     erd_attribute.validate(attribute)
+        for attribute in attributes:
+            erd_attribute.validate(attribute)
         self.attributes = attributes
 
     def __repr__(self):
@@ -32,8 +47,9 @@ class ERDBlock(object):
             reader = csv.reader(csv_file)
             entity_name = os.path.basename(path).replace(".csv", "")
             headers = next(reader)
+            print(cleaned_headers(headers))
             # TODO: try to guess data type given values
-            attributes = [('str', h.strip().replace(" ", "-")) for h in headers if h]
+            attributes = [('str', header) for header in cleaned_headers(headers)]
             return cls(entity_name, attributes)
 
     @classmethod
