@@ -1,2 +1,1 @@
-#!zsh
-open "https://mermaid.ink/svg/$(python3 main.py | base64)"
+open "https://mermaid.ink/svg/$(poetry run python main.py | base64)"
