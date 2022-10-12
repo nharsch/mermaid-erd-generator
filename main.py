@@ -45,7 +45,7 @@ class ERDBlock(object):
         """
         with open(path) as csv_file:
             reader = csv.reader(csv_file)
-            entity_name = "TABLE__{}".format(os.path.basename(path).replace(".csv", ""))
+            entity_name = os.path.basename(path).replace(".csv", "")
             headers = next(reader)
             # TODO: try to guess data type given values
             attributes = [('str', header) for header in cleaned_headers(headers)]
@@ -59,7 +59,7 @@ class ERDBlock(object):
     @property
     def erd_string(self):
         # TODO: how to fix whitespacing
-        erd_str = "{entity_name} {{ {attributes} }}".format(entity_name=self.entity_name.upper(),
+        erd_str = "{entity_name} {{ {attributes} }}".format(entity_name="TABLE__{}".format(self.entity_name.upper()),
                                                             attributes=" ".join(("{} {}".format(c[0], c[1]) for c in self.attributes)))
         return erd_str
 
@@ -77,7 +77,6 @@ class ERDDiagram(object):
         blocks = []
         for filename in os.listdir(csv_dir):
             path = os.path.join(CSV_DIR, filename)
-            table_name = filename.replace(".csv", "")
             erd_block = ERDBlock.from_csv(path)
             blocks.append(erd_block)
         return cls(blocks)
@@ -90,6 +89,7 @@ class ERDDiagram(object):
     @property
     def erd_string(self):
         return "erDiagram\n{}".format("\n".join(b.erd_string for b in self.blocks))
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
