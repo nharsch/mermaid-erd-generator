@@ -1,20 +1,29 @@
 #!python3
-import os
 import csv
+import os
+import re
 import sys
 import pandas
+from fuzzywuzzy import fuzz
 from schema import Schema, Or, Regex
 
 
 CSV_DIR = "csvs"  # TODO: remove
 
-
+rel_type = Or("one-to-one", "one-to-many", "many-to-many")
 erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLITE minimum set + bool
                         Regex("^\S*$")))                    # Non empty strings for names
+
 
 def clean_field(field):
     return field.strip()\
                 .replace(" ", "-")  # slugify spaces
+
+def clean_entity_name(entity_name):
+    if re.match("^[^a-zA-Z].*", entity_name):
+        # TODO: is there a better way?
+        entity_name = f"SAFE__{entity_name}"
+    return entity_name.upper()
 
 def abstract_type_from_dtype(dtype):
     dstr = str(dtype)
@@ -29,10 +38,8 @@ def abstract_type_from_dtype(dtype):
     return dstr
 
 class ERDBlock(object):
-    def __init__(self, entity_name: str, attributes: erd_attribute):
-        self.entity_name = entity_name
-        for attribute in attributes:
-            erd_attribute.validate(attribute)
+    def __init__(self, entity_name: str, attributes: list[erd_attribute]):
+        self.entity_name = clean_entity_name(entity_name)
         self.attributes = attributes
 
     def __repr__(self):
@@ -59,16 +66,55 @@ class ERDBlock(object):
 
     @property
     def erd_string(self):
-        # TODO: how to fix whitespacing
-        erd_str = "{entity_name} {{ {attributes} }}".format(entity_name="TABLE__{}".format(self.entity_name.upper()),
-                                                            attributes=" ".join(("{} {}".format(c[0], c[1]) for c in self.attributes)))
-        return erd_str
+        attributes=" ".join(("{} {}".format(c[0], c[1]) for c in self.attributes))
+        return f"{self.entity_name} {{ {attributes} }}"
 
+
+class ERDRelation(object):
+    def __init__(self, from_name: str, to_name: str, rel_type: rel_type, label: str = None):
+        self.from_name = from_name
+        self.to_name = to_name
+        self.rel_type = rel_type
+        self.label = label
+
+    def __repr__(self):
+        return self.erd_string
+
+    @property
+    def rel_str(self):
+        if self.rel_type == "one-to-one":
+            return "||--||"
+        if self.rel_type == "one-to-many":
+            return "||--o{"
+        if self.rel_type == "many-to-many":
+            return "}o--o{"
+
+    @property
+    def erd_string(self):
+        return f"{self.from_name} {self.rel_str} {self.to_name} : {self.label}"
+
+
+def find_relations(blocks: list[ERDBlock]):
+    relations = []
+    for current_block in blocks:
+        for typ, attr in current_block.attributes:
+            ranks = [(block.entity_name, fuzz.token_sort_ratio(attr, block.entity_name))
+                     for block in blocks
+                     if fuzz.token_sort_ratio(attr, block.entity_name) > 50]
+            if len(ranks):
+                entity_name, confidence_level = max(ranks, key=lambda x: x[1])
+                rel = ERDRelation(entity_name,
+                                current_block.entity_name,
+                                rel_type="one-to-many",
+                                label=f'"{confidence_level}% confidence match on {current_block.entity_name}.{attr}"')
+                relations.append(rel)
+    return relations
 
 class ERDDiagram(object):
 
-    def __init__(self, blocks):
+    def __init__(self, blocks: list[ERDBlock], relations: list[ERDRelation]):
         self.blocks = blocks
+        self.relations = relations
 
     def __repr__(self):
         return self.erd_string
@@ -80,7 +126,8 @@ class ERDDiagram(object):
             path = os.path.join(CSV_DIR, filename)
             erd_block = ERDBlock.from_csv(path)
             blocks.append(erd_block)
-        return cls(blocks)
+            relations = find_relations(blocks)
+        return cls(blocks, relations)
 
     @classmethod
     def from_sql(cls, sql_str):
@@ -89,7 +136,9 @@ class ERDDiagram(object):
 
     @property
     def erd_string(self):
-        return "erDiagram\n{}".format("\n".join(b.erd_string for b in self.blocks))
+        # TODO: render relations
+        return "erDiagram\n{}\n{}".format("\n".join(b.erd_string for b in self.blocks),
+                                          "\n".join(rel.erd_string for rel in self.relations))
 
 
 if __name__ == "__main__":

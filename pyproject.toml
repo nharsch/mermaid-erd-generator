@@ -10,6 +10,8 @@ packages = [{include = "mermaid_erd"}]
 python = "^3.8"
 schema = "0.7.5"
 pandas = "^1.5.0"
+fuzzywuzzy = "^0.18.0"
+python-levenshtein = "^0.20.5"
 
 
 [build-system]
