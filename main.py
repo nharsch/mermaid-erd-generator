@@ -2,6 +2,7 @@
 import os
 import csv
 import sys
+import pandas
 from schema import Schema, Or, Regex
 
 
@@ -11,21 +12,21 @@ CSV_DIR = "csvs"  # TODO: remove
 erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLITE minimum set + bool
                         Regex("^\S*$")))                    # Non empty strings for names
 
+def clean_field(field):
+    return field.strip()\
+                .replace(" ", "-")  # slugify spaces
 
-def cleaned_headers(headers):
-    cleaned_headers = []
-    empty_idx = 0
-    for header in headers:
-        # strip whtiespace and slugify
-        cleaned = header.strip().replace(" ", "_")
-        # label empty headers
-        if cleaned == "":
-            empty_idx += 1
-            cleaned_headers.append("empty_header_{}".format(empty_idx))
-        else:
-            cleaned_headers.append(cleaned)
-    return cleaned_headers
-
+def abstract_type_from_dtype(dtype):
+    dstr = str(dtype)
+    if dstr == "object":
+        return "str"
+    if dstr == "int64":
+        return "int"
+    if dstr == "float64":
+        return "float"
+    if dstry == "boolean":
+        return "bool"
+    return dstr
 
 class ERDBlock(object):
     def __init__(self, entity_name: str, attributes: erd_attribute):
@@ -44,11 +45,11 @@ class ERDBlock(object):
         csv_string: csv string where first row contains headers
         """
         with open(path) as csv_file:
-            reader = csv.reader(csv_file)
-            entity_name = os.path.basename(path).replace(".csv", "")
-            headers = next(reader)
-            # TODO: try to guess data type given values
-            attributes = [('str', header) for header in cleaned_headers(headers)]
+            entity_name = clean_field(os.path.basename(path).replace(".csv", ""))
+            dataframe = pandas.read_csv(csv_file)
+            dataframe.columns = [clean_field(col) for col in dataframe.columns]
+            attributes = [(abstract_type_from_dtype(dataframe[col].dtype), col)\
+                          for col in dataframe.columns]
             return cls(entity_name, attributes)
 
     @classmethod

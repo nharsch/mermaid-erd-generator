@@ -1,4 +1,4 @@
-id,first_name,last_name,email,GPA,department,team
+id,first_name  ,  last_name,email,GPA,department,team
 1,Shela,Dorrell,sdorrell0@gov.uk,2.77,Accounting,1
 2,Claribel,Noddles,cnoddles1@cbc.ca,2.44,Services,2
 3,Gerhard,Lounds,glounds2@china.com.cn,3.13,Services,3
