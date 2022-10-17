@@ -33,7 +33,7 @@ def abstract_type_from_dtype(dtype):
         return "int"
     if dstr == "float64":
         return "float"
-    if dstry == "boolean":
+    if dstr == "boolean":
         return "bool"
     return dstr
 
