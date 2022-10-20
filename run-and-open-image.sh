@@ -1,1 +1,1 @@
-open "https://mermaid.ink/img/$(poetry run python main.py | base64)"
+exec open "https://mermaid.ink/img/$(./run.sh $@ | base64)"

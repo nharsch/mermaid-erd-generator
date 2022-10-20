@@ -16,8 +16,7 @@ erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLIT
 
 
 def clean_field(field):
-    return field.strip()\
-                .replace(" ", "-")  # slugify spaces
+    return field.strip().replace(" ", "-").replace(".", "-DOT-")
 
 def clean_entity_name(entity_name):
     if re.match("^[^a-zA-Z].*", entity_name):
@@ -51,13 +50,14 @@ class ERDBlock(object):
         entity_name: name of entity
         csv_string: csv string where first row contains headers
         """
-        with open(path) as csv_file:
-            entity_name = clean_field(os.path.basename(path).replace(".csv", ""))
-            dataframe = pandas.read_csv(csv_file)
-            dataframe.columns = [clean_field(col) for col in dataframe.columns]
-            attributes = [(abstract_type_from_dtype(dataframe[col].dtype), col)\
-                          for col in dataframe.columns]
-            return cls(entity_name, attributes)
+        entity_name = clean_field(os.path.basename(path).replace(".csv", ""))
+        dataframe = pandas.read_csv(path, encoding_errors="ignore")
+        dataframe.columns = [clean_field(col) for col in dataframe.columns]
+        dataframe = dataframe.loc[:, ~dataframe.columns.str.contains('^Unnamed')]
+        dataframe = dataframe.loc[:, ~dataframe.columns.str.contains('^Unnamed')]
+        attributes = [(abstract_type_from_dtype(dataframe[col].dtype), col)\
+                        for col in dataframe.columns if col]
+        return cls(entity_name, attributes)
 
     @classmethod
     def from_SQL(cls):
@@ -100,7 +100,8 @@ def find_relations(blocks: list[ERDBlock]):
         for typ, attr in current_block.attributes:
             ranks = [(block.entity_name, fuzz.token_sort_ratio(attr, block.entity_name))
                      for block in blocks
-                     if fuzz.token_sort_ratio(attr, block.entity_name) > 50]
+                     if fuzz.token_sort_ratio(attr, block.entity_name) > 75
+                     and block != current_block]
             if len(ranks):
                 entity_name, confidence_level = max(ranks, key=lambda x: x[1])
                 rel = ERDRelation(entity_name,

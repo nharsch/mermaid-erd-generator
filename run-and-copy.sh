@@ -1,1 +1,1 @@
-poetry run python main.py | pbcopy
+exec ./run.sh $@ | pbcopy

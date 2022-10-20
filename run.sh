@@ -1,1 +1,1 @@
-poetry run python main.py
+exec poetry run python main.py $@
