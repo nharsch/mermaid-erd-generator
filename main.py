@@ -16,7 +16,13 @@ erd_attribute = Schema((Or("str", "int", "float", "bool"),  # Supports the SQLIT
 
 
 def clean_field(field):
-    return field.strip().replace(" ", "-").replace(".", "-DOT-")
+    field = field.strip().replace(" ", "-").replace(".", "")
+    if re.match("^[^a-zA-Z].*", field):
+        # TODO: is there a better way?
+        field = f"SAFE__{field}"
+    if not field:
+        return "blank"
+    return field
 
 def clean_entity_name(entity_name):
     if re.match("^[^a-zA-Z].*", entity_name):
@@ -51,13 +57,20 @@ class ERDBlock(object):
         csv_string: csv string where first row contains headers
         """
         entity_name = clean_field(os.path.basename(path).replace(".csv", ""))
-        dataframe = pandas.read_csv(path, encoding_errors="ignore")
+        dataframe = pandas.read_csv(path, encoding_errors="ignore", low_memory=False, on_bad_lines="skip")
+        # clean up columnd names
         dataframe.columns = [clean_field(col) for col in dataframe.columns]
         dataframe = dataframe.loc[:, ~dataframe.columns.str.contains('^Unnamed')]
-        dataframe = dataframe.loc[:, ~dataframe.columns.str.contains('^Unnamed')]
-        attributes = [(abstract_type_from_dtype(dataframe[col].dtype), col)\
-                        for col in dataframe.columns if col]
-        return cls(entity_name, attributes)
+        # find types
+        table_attributes = []
+        for col in dataframe.columns:
+            if col:
+                try:
+                    dstring = abstract_type_from_dtype(dataframe[col].dtype)
+                except AttributeError:
+                    dstring = "str"
+            table_attributes.append((dstring, col))
+        return cls(entity_name, table_attributes)
 
     @classmethod
     def from_SQL(cls):
