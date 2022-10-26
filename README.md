@@ -15,3 +15,7 @@ This will print a Mermaid ERD Diagram with Entities for each CSV file. CSV Heade
 This printed diagram string can be previewed using a Mermaid preview tool like [Mermaid Live](https://mermaid.live/edit#pako:eNpFj8EKwjAMhl-l5Lwn6E3QnQTBeSxIXLNZaNORpQcZe3crDHv7Avn-5N9gzJ7AAsk54CyYHA-PU9-bzawqgWfDmMjxMeDc2OfXnyVHMrvj--16GZqrQWMTwvpMyDVCWgYtKJqI9WdDB4kkYfD1o82xMQ70TfU-2IqeJixRHTje6yoWzcOHR7AqhTooi0elowbYCeNK-xdDclGN)
 
 ![Test Diagram](./example-erd.jpeg)
+
+## Generating a SQL Schema
+
+To generate a SQL schema of the diagram, run `./main.py CSV_DIR -sql`

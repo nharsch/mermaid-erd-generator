@@ -50,8 +50,6 @@ def sql_type_from_abstract_type(atype):
         return "INTEGER"
     return "TEXT"
 
-
-
 def attribute_to_sql_column_string(attribute: erd_attribute):
     sql_type = sql_type_from_abstract_type(attribute[0])
     attr_name = clean_field(attribute[1])
@@ -102,7 +100,7 @@ class ERDBlock(object):
         CREATE TABLE IF NOT EXISTS {table_name} (
         pk INTEGER PRIMARY KEY AUTOINCREMENT,
         {columns}
-        )
+        );
         """.format(table_name=self.entity_name, columns=column_statements)
 
 
@@ -182,7 +180,7 @@ class ERDDiagram(object):
         pass
 
     @property
-    def sql_string(self):
+    def sql_string(self ):
         # TODO render create statements for relationships
         return "\n\n".join(block.sql_string for block in self.blocks)
 
@@ -198,4 +196,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         CSV_DIR = sys.argv[1]
     diagram = ERDDiagram.from_csv_dir(CSV_DIR)
-    print(diagram.erd_string)
+    # TODO: do this right
+    if len(sys.argv) > 2 and sys.argv[2] == "-sql":
+        print(diagram.sql_string)
+    else:
+        print(diagram.erd_string)
