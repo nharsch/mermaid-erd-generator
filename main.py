@@ -31,16 +31,33 @@ def clean_entity_name(entity_name):
     return entity_name.upper()
 
 def abstract_type_from_dtype(dtype):
+    """attempt to get data datatype of column"""
     dstr = str(dtype)
-    if dstr == "object":
-        return "str"
     if dstr == "int64":
         return "int"
     if dstr == "float64":
         return "float"
     if dstr == "boolean":
         return "bool"
-    return dstr
+    return "str"
+
+def sql_type_from_abstract_type(atype):
+    if atype == "int":
+        return "INTEGER"
+    if atype == "float64":
+        return "REAL"
+    if atype == "boolean":
+        return "INTEGER"
+    return "TEXT"
+
+
+
+def attribute_to_sql_column_string(attribute: erd_attribute):
+    sql_type = sql_type_from_abstract_type(attribute[0])
+    attr_name = clean_field(attribute[1])
+    return f"{attr_name} {sql_type}"
+    pass
+
 
 class ERDBlock(object):
     def __init__(self, entity_name: str, attributes: list[erd_attribute]):
@@ -78,6 +95,18 @@ class ERDBlock(object):
         pass
 
     @property
+    def sql_string(self):
+        # TODO
+        column_statements = ",\n".join(attribute_to_sql_column_string(attr) for attr in self.attributes)
+        return """
+        CREATE TABLE IF NOT EXISTS {table_name} (
+        pk INTEGER PRIMARY KEY AUTOINCREMENT,
+        {columns}
+        )
+        """.format(table_name=self.entity_name, columns=column_statements)
+
+
+    @property
     def erd_string(self):
         attributes=" ".join(("{} {}".format(c[0], c[1]) for c in self.attributes))
         return f"{self.entity_name} {{ {attributes} }}"
@@ -106,6 +135,10 @@ class ERDRelation(object):
     def erd_string(self):
         return f"{self.from_name} {self.rel_str} {self.to_name} : {self.label}"
 
+    @property
+    def sql_str(self):
+        pass
+
 
 def find_relations(blocks: list[ERDBlock]):
     relations = []
@@ -123,6 +156,7 @@ def find_relations(blocks: list[ERDBlock]):
                                 label=f'"{confidence_level}% confidence match on {current_block.entity_name}.{attr}"')
                 relations.append(rel)
     return relations
+
 
 class ERDDiagram(object):
 
@@ -145,12 +179,17 @@ class ERDDiagram(object):
 
     @classmethod
     def from_sql(cls, sql_str):
-        # TODO
         pass
 
     @property
+    def sql_string(self):
+        # TODO render create statements for relationships
+        return "\n\n".join(block.sql_string for block in self.blocks)
+
+
+
+    @property
     def erd_string(self):
-        # TODO: render relations
         return "erDiagram\n{}\n{}".format("\n".join(b.erd_string for b in self.blocks),
                                           "\n".join(rel.erd_string for rel in self.relations))
 
