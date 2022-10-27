@@ -1,0 +1,11 @@
+{
+  "name": "mermaid-erd-db-toolkit",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "shadow-cljs": "^2.20.6"
+  },
+  "dependencies": {
+    "mermaid": "^9.1.7"
+  }
+}
