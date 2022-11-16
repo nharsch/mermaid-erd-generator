@@ -1,5 +1,4 @@
 #!python3
-import csv
 import os
 import re
 import sys
@@ -136,6 +135,7 @@ class ERDDiagram(object):
     @classmethod
     def from_csv_dir(cls, csv_dir):
         blocks = []
+        # TODO: only match on csv, tsv
         for filename in os.listdir(csv_dir):
             path = os.path.join(CSV_DIR, filename)
             erd_block = ERDBlock.from_csv(path)
